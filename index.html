@@ -3,25 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel Regional - Alerta Veículos SESP/PR</title>
+  <title>Painel Regional PMPR - Alerta Veículos</title>
   <style>
     :root {
-      --bg-color: #121214;
+      --bg: #121214;
       --card-bg: #1e1e24;
-      --accent-color: #ffcc00;
-      --danger-color: #d32f2f;
-      --text-color: #ffffff;
+      --accent: #ffcc00;
+      --danger: #d32f2f;
+      --text: #ffffff;
       --text-sub: #a0a0b0;
     }
-
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
+      background-color: var(--bg);
+      color: var(--text);
       margin: 0;
       padding: 20px;
     }
-
     .header {
       display: flex;
       justify-content: space-between;
@@ -29,27 +27,24 @@
       background: var(--card-bg);
       padding: 20px;
       border-radius: 10px;
-      border-left: 6px solid var(--accent-color);
+      border-left: 6px solid var(--accent);
       margin-bottom: 20px;
     }
+    h1 { margin: 0; font-size: 1.5rem; color: var(--accent); }
+    .status-bar { display: flex; gap: 20px; align-items: center; font-size: 0.95rem; }
+    .timer { color: var(--accent); font-weight: bold; }
 
-    h1 {
-      margin: 0;
-      font-size: 1.5rem;
-      color: var(--accent-color);
+    .metrics { display: flex; gap: 15px; margin-bottom: 20px; }
+    .metric-card {
+      flex: 1;
+      background: var(--card-bg);
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      border: 1px solid #2a2a35;
     }
-
-    .status-bar {
-      display: flex;
-      gap: 20px;
-      align-items: center;
-      font-size: 0.95rem;
-    }
-
-    .timer {
-      color: var(--accent-color);
-      font-weight: bold;
-    }
+    .metric-card h3 { margin: 0; font-size: 1.8rem; color: var(--accent); }
+    .metric-card span { font-size: 0.85rem; color: var(--text-sub); }
 
     .cia-container {
       background: var(--card-bg);
@@ -57,21 +52,18 @@
       border-radius: 10px;
       margin-bottom: 20px;
     }
-
     .cia-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 15px;
       margin-top: 10px;
     }
-
     .cia-card {
       background: #252530;
       padding: 12px 15px;
       border-radius: 8px;
       border: 1px solid #333344;
     }
-
     .cia-header {
       font-weight: bold;
       color: #64b5f6;
@@ -82,23 +74,16 @@
       border-bottom: 1px solid #333;
       padding-bottom: 5px;
     }
-
     .city-list {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 6px;
       font-size: 0.85rem;
     }
-
-    .city-list label {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      cursor: pointer;
-    }
+    .city-list label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
 
     .btn {
-      background: var(--accent-color);
+      background: var(--accent);
       color: #000;
       border: none;
       padding: 10px 18px;
@@ -106,20 +91,7 @@
       border-radius: 6px;
       cursor: pointer;
     }
-
-    .btn:hover {
-      opacity: 0.9;
-    }
-
-    .cors-notice {
-      background: #3a2510;
-      border: 1px solid #ff9800;
-      color: #ffe0b2;
-      padding: 12px 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      font-size: 0.85rem;
-    }
+    .btn:hover { opacity: 0.9; }
 
     table {
       width: 100%;
@@ -129,24 +101,9 @@
       overflow: hidden;
       margin-top: 15px;
     }
-
-    th, td {
-      padding: 12px 15px;
-      text-align: left;
-      border-bottom: 1px solid #2a2a35;
-    }
-
-    th {
-      background: #282834;
-      color: var(--accent-color);
-      font-weight: 600;
-    }
-
-    tr.alerta-regiao {
-      background-color: var(--danger-color) !important;
-      color: #ffffff;
-      font-weight: bold;
-    }
+    th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #2a2a35; }
+    th { background: #282834; color: var(--accent); font-weight: 600; }
+    tr.alerta-regiao { background-color: var(--danger) !important; color: #ffffff; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -154,21 +111,28 @@
   <div class="header">
     <div>
       <h1>🚔 Painel Regional - Alerta Veículos SESP/PR</h1>
-      <small style="color: var(--text-sub);">Monitoramento Tático Regional</small>
+      <small style="color: var(--text-sub);">18ª SD / Monitoramento Tático</small>
     </div>
     <div class="status-bar">
-      <div id="status-text">Iniciando busca...</div>
+      <div id="status-text">Conectando...</div>
       <div>Atualiza em: <span id="timer" class="timer">120</span>s</div>
       <button class="btn" onclick="carregarAlertas()">🔄 Atualizar</button>
     </div>
   </div>
 
-  <div class="cors-notice" id="cors-notice">
-    ⚠️ <strong>Atenção:</strong> Para que o site leia a tabela da intranet SESP a partir da nuvem, certifique-se de ativar a extensão de permissão de acesso no navegador deste computador.
+  <div class="metrics">
+    <div class="metric-card">
+      <h3 id="total-estado">0</h3>
+      <span>Alertas no Estado</span>
+    </div>
+    <div class="metric-card">
+      <h3 id="total-regiao" style="color: #ff5252;">0</h3>
+      <span>Veículos na Sua Região</span>
+    </div>
   </div>
 
   <div class="cia-container">
-    <strong style="color: var(--accent-color);">⚙️ Municípios Monitorados por Cia:</strong>
+    <strong style="color: var(--accent);">⚙️ Filtro de Municípios por Companhia:</strong>
     <div class="cia-grid">
       
       <!-- 1ª CIA -->
@@ -234,12 +198,11 @@
       </tr>
     </thead>
     <tbody id="corpo-tabela">
-      <tr><td colspan="5" style="text-align:center;">Buscando alertas na rede SESP...</td></tr>
+      <tr><td colspan="5" style="text-align:center;">Aguardando ponte de dados com a SESP...</td></tr>
     </tbody>
   </table>
 
   <script>
-    const URL_SESP = 'https://alertaveiculos.sesp.parana/alertaveiculos/index.do?action=iniciarProcesso';
     let tempoRestante = 120;
 
     function toggleCia(ciaId, marcar) {
@@ -253,28 +216,56 @@
       return Array.from(checkboxes).map(cb => cb.value.toUpperCase());
     }
 
+    function buscarHTMLSesp() {
+      return new Promise((resolve, reject) => {
+        let respondido = false;
+
+        function tratarResposta(e) {
+          window.removeEventListener('RESPOSTA_SESP', tratarResposta);
+          if (!respondido) {
+            respondido = true;
+            if (e.detail && e.detail.html) {
+              resolve(e.detail.html);
+            } else {
+              reject(e.detail?.error || 'Erro na ponte');
+            }
+          }
+        }
+
+        window.addEventListener('RESPOSTA_SESP', tratarResposta);
+        window.dispatchEvent(new CustomEvent('BUSCAR_SESP'));
+
+        // Timeout de segurança em 5s
+        setTimeout(() => {
+          if (!respondido) {
+            respondido = true;
+            window.removeEventListener('RESPOSTA_SESP', tratarResposta);
+            reject('Ponte Tampermonkey não detectada neste navegador.');
+          }
+        }, 5000);
+      });
+    }
+
     async function carregarAlertas() {
       const statusEl = document.getElementById('status-text');
-      statusEl.innerText = 'Buscando alertas...';
-
-      const cidadesSelecionadas = obterCidadesSelecionadas();
+      statusEl.innerText = 'Buscando alertas na SESP...';
       const corpoTabela = document.getElementById('corpo-tabela');
 
       try {
-        const response = await fetch(URL_SESP);
-        if (!response.ok) throw new Error('Falha na resposta da rede');
-        
-        const htmlText = await response.text();
+        const htmlText = await buscarHTMLSesp();
         const parser = new DOMParser();
         const doc = parser.parseFromString(htmlText, 'text/html');
         
         const linhas = doc.querySelectorAll('table tr');
         corpoTabela.innerHTML = '';
 
+        const cidadesSelecionadas = obterCidadesSelecionadas();
         let encontrados = 0;
+        let totalEstado = 0;
 
         linhas.forEach((linha, index) => {
-          if (index === 0) return; // Ignora cabeçalho original
+          if (index === 0) return;
+          totalEstado++;
 
           const textoLinha = linha.innerText.toUpperCase();
           const pertence = cidadesSelecionadas.some(cidade => textoLinha.includes(cidade));
@@ -288,23 +279,22 @@
           }
         });
 
+        document.getElementById('total-estado').innerText = totalEstado;
+        document.getElementById('total-regiao').innerText = encontrados;
+
         if (encontrados === 0) {
           corpoTabela.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#28a745;">✅ Nenhum veículo roubado/furtado registrado para as cidades selecionadas no momento.</td></tr>';
         }
 
-        statusEl.innerText = `Atualizado! ${encontrados} veículo(s) na região.`;
-        document.getElementById('cors-notice').style.display = 'none';
-
+        statusEl.innerText = `Atualizado às ${new Date().toLocaleTimeString('pt-BR')}`;
       } catch (err) {
-        statusEl.innerText = 'Erro ao conectar à SESP.';
-        corpoTabela.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#dc3545;">⚠️ Não foi possível ler a tabela. Verifique se está conectado à intranet da SESP e ative a permissão de CORS no navegador.</td></tr>';
-        document.getElementById('cors-notice').style.display = 'block';
+        statusEl.innerText = 'Erro de conexão';
+        corpoTabela.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#dc3545;">⚠️ ${err}. Certifique-se de instalar o script de ponte no Tampermonkey.</td></tr>`;
       }
 
       tempoRestante = 120;
     }
 
-    // Temporizador de 2 minutos
     setInterval(() => {
       tempoRestante--;
       document.getElementById('timer').innerText = tempoRestante;
@@ -313,7 +303,6 @@
       }
     }, 1000);
 
-    // Carga inicial ao abrir a página
     carregarAlertas();
   </script>
 </body>
