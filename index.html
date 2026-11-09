@@ -1,0 +1,221 @@
+import streamlit as st
+import pandas as pd
+import requests
+from streamlit_autorefresh import st_autorefresh
+
+# Configuração da tela
+st.set_page_config(
+    page_title="Painel Alerta Veículos - PMPR",
+    page_icon="🚔",
+    layout="wide"
+)
+
+# Atualiza a página automaticamente a cada 2 minutos (120.000 ms)
+st_autorefresh(interval=120000, key="datarefresh")
+
+st.title("🚔 Painel Regional de Alerta de Veículos - SESP/PR")
+st.caption("Atualizado automaticamente a cada 2 minutos | Conectado à Intranet")
+
+# Menu Lateral para controle dos municípios
+st.sidebar.header("⚙️ Configurações da Região")
+cidades_default = ["LONDRINA", "CAMBÉ", "IBIPORÃ", "ROLÂNDIA", "ARAPONGAS"]
+
+cidades_selecionadas = st.sidebar.multiselect(
+    "Selecione os municípios monitorados:",
+    options=[
+        "LONDRINA", "CAMBÉ", "IBIPORÃ", "ROLÂNDIA", "ARAPONGAS",
+        "MARINGÁ", "CURITIBA", "PONTA GROSSA", "CASCAVEL", "FOZ DO IGUAÇU"
+    ],
+    default=cidades_default
+)
+
+# Função para ler a tabela do Alerta Veículos SESP
+@st.cache_data(ttl=110)
+def buscar_dados_sesp():
+    url = "https://alertaveiculos.sesp.parana/alertaveiculos/index.do?action=iniciarProcesso"
+    headers = {"User-Agent": "Mozilla/5.0"}
+    try:
+        res = requests.get(url, headers=headers, timeout=10)
+        tabelas = pd.read_html(res.text)
+        return tabelas[0] if tabelas else pd.DataFrame()
+    except Exception as e:
+        st.error(f"Erro ao conectar com a SESP Intranet: {e}")
+        return pd.DataFrame()
+
+df = buscar_dados_sesp()
+
+if not df.empty:
+    # Procura a coluna de município/cidade na tabela da SESP
+    col_cidade = [c for c in df.columns if "MUNICIPIO" in str(c).upper() or "CIDADE" in str(c).upper()]
+    
+    if col_cidade:
+        col_nome = col_cidade[0]
+        cidades_upper = [c.upper() for c in cidades_selecionadas]
+        
+        # Aplica o filtro regional
+        df_filtrado = df[df[col_nome].astype(str).str.upper().isin(cidades_upper)]
+        
+        # Cartões no topo
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Alertas no Estado", len(df))
+        c2.metric("Ocorrências na Sua Região", len(df_filtrado))
+        c3.metric("Cidades Monitoradas", len(cidades_selecionadas))
+        
+        st.divider()
+        
+        if not df_filtrado.empty:
+            st.error("🚨 ATENÇÃO: VEÍCULOS ROUBADOS/FURTADOS NA SUA REGIÃO!")
+            st.dataframe(df_filtrado, use_container_width=True)
+        else:
+            st.success("✅ Nenhuma ocorrência registrada para as cidades selecionadas no momento.")
+    else:
+        st.write("Tabela carregada:", df)
+Passo 5: Iniciar o Servidor e Descobrir o IP
+No Prompt de Comando, navegue até a pasta:
+cd C:\AlertaVeiculos
+Inicie o Streamlit:
+streamlit run app.py
+O terminal mostrará duas URLs:
+Local URL: http://localhost:8501
+Network URL: http://10.x.x.x:8501 (Copie este endereço de rede!)
+Passo 6: Como Acessar de Outros Dispositivos
+Qualquer policial na unidade poderá abrir o painel filtrado no navegador do computador, tablet ou celular (conectado ao Wi-Fi interno da Companhia):
+Basta digitar o Network URL (ex: http://10.x.x.x:8501) na barra de endereços.
+💡 Dica útil: Se quiser que esse servidor ligue sozinho sempre que o computador for iniciado ou reiniciado, posso te mandar o passo a passo para criar um arquivo de inicialização automática no Windows!
+nao quero instalar o pyton, quero deixar na nuvem tambem assim como fiz com os outros sites que fizemos
+
+
+Thoughts
+Entendido perfeitamente! Se a ideia é não instalar o Python e deixar 100% hospedado na nuvem (como no GitHub Pages, Vercel ou Netlify), dá para fazer de forma totalmente gratuita e sem precisar mexer em nada no computador da unidade!
+Como essa solução na nuvem funciona?
+Para o site ficar na nuvem e ainda assim conseguir ler o sistema da SESP (que é interno), a solução ideal é uma aplicação web em HTML + JavaScript:
+Hospedagem na Nuvem: O site fica salvo na nuvem (exemplo: [suspicious link removed]).
+Execução no Navegador: Quando o policial abre esse link na nuvem estando em um computador ou tablet conectado à rede da SESP, o próprio navegador do policial faz a leitura da página da SESP e aplica os filtros de cidade na tela.
+Zero Instalação: Não precisa instalar Python, servidor ou nenhum programa no computador. Basta abrir o link do site no Chrome ou Edge!
+Código do Site (index.html)
+Abaixo está o arquivo único em HTML/JS pronto com visual moderno, atualização automática a cada 2 minutos e filtro por cidade:
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Regional - Alerta Veículos SESP/PR</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #121212; color: #ffffff; margin: 0; padding: 20px; }
+    h1 { color: #ffcc00; text-align: center; }
+    .header-bar { display: flex; justify-content: space-between; align-items: center; background-color: #1e1e1e; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+    .controls { margin-bottom: 20px; background: #1e1e1e; padding: 15px; border-radius: 8px; }
+    label { font-weight: bold; margin-right: 10px; }
+    input[type="text"] { width: 60%; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #2b2b2b; color: #fff; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #1e1e1e; border-radius: 8px; overflow: hidden; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
+    th { background-color: #2b2b2b; color: #ffcc00; }
+    tr.alerta-regiao { background-color: #721c24; color: #ffffff; font-weight: bold; }
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.9em; }
+    .badge-danger { background-color: #dc3545; color: white; }
+    .status { font-size: 0.9em; color: #aaa; }
+  </style>
+</head>
+<body>
+
+  <h1>🚔 Painel Regional - Alerta Veículos SESP/PR</h1>
+
+  <div class="header-bar">
+    <div><strong>Status:</strong> <span id="status-text">Carregando alertas...</span></div>
+    <div class="status">Próxima atualização em: <span id="timer">120</span>s</div>
+  </div>
+
+  <div class="controls">
+    <label for="cidades">Cidades Monitoradas (separadas por vírgula):</label>
+    <input type="text" id="cidades" value="LONDRINA, CAMBÉ, IBIPORÃ, ROLÂNDIA, ARAPONGAS">
+    <button onclick="carregarAlertas()" style="padding: 8px 15px; background: #ffcc00; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Filtrar Agora</button>
+  </div>
+
+  <div id="resultado">
+    <table id="tabela-alertas">
+      <thead>
+        <tr>
+          <th>Horário / Data</th>
+          <th>Município</th>
+          <th>Placa</th>
+          <th>Veículo / Modelo</th>
+          <th>Tipo (Roubo/Furto)</th>
+        </tr>
+      </thead>
+      <tbody id="corpo-tabela">
+        <tr><td colspan="5" style="text-align:center;">Buscando ocorrências na rede SESP...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const URL_SESP = 'https://alertaveiculos.sesp.parana/alertaveiculos/index.do?action=iniciarProcesso';
+    let tempoRestante = 120;
+
+    async function carregarAlertas() {
+      const statusEl = document.getElementById('status-text');
+      statusEl.innerText = 'Atualizando dados...';
+
+      const cidadesInput = document.getElementById('cidades').value;
+      const listaCidades = cidadesInput.split(',').map(c => c.trim().toUpperCase());
+
+      try {
+        const response = await fetch(URL_SESP);
+        const htmlText = await response.text();
+        
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlText, 'text/html');
+        
+        // Seleciona as linhas da tabela original
+        const linhas = doc.querySelectorAll('table tr');
+        const corpoTabela = document.getElementById('corpo-tabela');
+        corpoTabela.innerHTML = '';
+
+        let encontrados = 0;
+
+        linhas.forEach((linha, index) => {
+          if (index === 0) return; // Pula cabeçalho
+
+          const colunas = linha.querySelectorAll('td');
+          if (colunas.length >= 4) {
+            const textoLinha = linha.innerText.toUpperCase();
+            
+            // Verifica se a linha pertence a alguma das cidades da região
+            const pertence = listaCidades.some(cidade => cidade && textoLinha.includes(cidade));
+
+            if (pertence) {
+              encontrados++;
+              const novaLinha = document.createElement('tr');
+              novaLinha.className = 'alerta-regiao';
+              novaLinha.innerHTML = linha.innerHTML;
+              corpoTabela.appendChild(novaLinha);
+            }
+          }
+        });
+
+        if (encontrados === 0) {
+          corpoTabela.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#28a745;">✅ Nenhuma ocorrência recente para as cidades selecionadas.</td></tr>';
+        }
+
+        statusEl.innerText = `Atualizado! ${encontrados} ocorrência(s) na sua região.`;
+      } catch (err) {
+        statusEl.innerText = 'Erro ao conectar com a SESP Intranet. Verifique se está conectado à rede interna.';
+      }
+
+      tempoRestante = 120;
+    }
+
+    // Cronômetro de 2 minutos
+    setInterval(() => {
+      tempoRestante--;
+      document.getElementById('timer').innerText = tempoRestante;
+      if (tempoRestante <= 0) {
+        carregarAlertas();
+      }
+    }, 1000);
+
+    // Primeira carga ao abrir
+    carregarAlertas();
+  </script>
+</body>
+</html>
