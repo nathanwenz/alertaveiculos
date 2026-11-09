@@ -198,7 +198,7 @@
       </tr>
     </thead>
     <tbody id="corpo-tabela">
-      <tr><td colspan="5" style="text-align:center;">Aguardando ponte de dados com a SESP...</td></tr>
+      <tr><td colspan="5" style="text-align:center;">Aguardando resposta da SESP...</td></tr>
     </tbody>
   </table>
 
@@ -221,34 +221,33 @@
         let respondido = false;
 
         function tratarResposta(e) {
-          window.removeEventListener('RESPOSTA_SESP', tratarResposta);
+          document.removeEventListener('RESPOSTA_SESP', tratarResposta);
           if (!respondido) {
             respondido = true;
             if (e.detail && e.detail.html) {
               resolve(e.detail.html);
             } else {
-              reject(e.detail?.error || 'Erro na ponte');
+              reject(e.detail?.error || 'Erro de resposta');
             }
           }
         }
 
-        window.addEventListener('RESPOSTA_SESP', tratarResposta);
-        window.dispatchEvent(new CustomEvent('BUSCAR_SESP'));
+        document.addEventListener('RESPOSTA_SESP', tratarResposta);
+        document.dispatchEvent(new CustomEvent('BUSCAR_SESP'));
 
-        // Timeout de segurança em 5s
         setTimeout(() => {
           if (!respondido) {
             respondido = true;
-            window.removeEventListener('RESPOSTA_SESP', tratarResposta);
-            reject('Ponte Tampermonkey não detectada neste navegador.');
+            document.removeEventListener('RESPOSTA_SESP', tratarResposta);
+            reject('Ponte não conectada no navegador');
           }
-        }, 5000);
+        }, 8000);
       });
     }
 
     async function carregarAlertas() {
       const statusEl = document.getElementById('status-text');
-      statusEl.innerText = 'Buscando alertas na SESP...';
+      statusEl.innerText = 'Buscando dados na SESP...';
       const corpoTabela = document.getElementById('corpo-tabela');
 
       try {
@@ -288,8 +287,8 @@
 
         statusEl.innerText = `Atualizado às ${new Date().toLocaleTimeString('pt-BR')}`;
       } catch (err) {
-        statusEl.innerText = 'Erro de conexão';
-        corpoTabela.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#dc3545;">⚠️ ${err}. Certifique-se de instalar o script de ponte no Tampermonkey.</td></tr>`;
+        statusEl.innerText = 'Erro na busca';
+        corpoTabela.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#dc3545;">⚠️ ${err}. Certifique-se de carregar a extensão no navegador.</td></tr>`;
       }
 
       tempoRestante = 120;
